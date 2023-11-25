@@ -4,7 +4,8 @@
     "keywords": [
         "jrpikong",
         "laravel",
-        "filamentimportexcel"
+        "filamentimportexcel",
+        "import"
     ],
     "homepage": "https://github.com/jrpikong/filament-import-excel",
     "license": "MIT",
