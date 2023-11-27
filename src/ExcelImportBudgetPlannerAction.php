@@ -212,7 +212,7 @@ class ExcelImportBudgetPlannerAction extends Action
                     'expense_budget_id' => $expenseBudget->id,
                     'user_id' => auth()->user()->id,
                     'before_amount' => $expenseBudget->amount,
-                    'amount' => $data['amount'],
+                    'amount' => $data['total_amount'],
                     'after_amount' => $newAmount,
                     'references' => $data['references'],
                     'entry' => 'OUT',
