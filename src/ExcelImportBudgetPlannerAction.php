@@ -214,7 +214,7 @@ class ExcelImportBudgetPlannerAction extends Action
                     'before_amount' => $expenseBudget->amount,
                     'amount' => $data['total_amount'],
                     'after_amount' => $newAmount,
-                    'references' => $data['references'],
+                    'references' => null,
                     'entry' => 'OUT',
                     'status' => 'DISTRIBUTE'
                 ]);
