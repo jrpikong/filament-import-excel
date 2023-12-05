@@ -2,6 +2,7 @@
 
 namespace Jrpikong\FilamentImportExcel;
 
+use App\Models\Branch;
 use App\Models\BudgetPlanner;
 use App\Models\ExpenseBudget;
 use App\Models\HistoryExpenseBudget;
@@ -19,6 +20,7 @@ use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Illuminate\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Mockery\Exception;
@@ -94,9 +96,7 @@ class ExcelImportBudgetPlannerAction extends Action
             TextInput::make('code')
                 ->required()
                 ->readOnly()
-                ->default(function () {
-                    return GenerateCode::create(BudgetPlanner::class, 'code', 'BPL');
-                })
+                ->live()
                 ->maxLength(255),
             Select::make('cluster_id')
                 ->relationship('cluster', 'name')
@@ -112,11 +112,23 @@ class ExcelImportBudgetPlannerAction extends Action
                 ->relationship('expenseBudget', 'code', fn($query, $get) => $query->where('cluster_id', $get('cluster_id'))->where('status', '=', 1))
                 ->searchable()
                 ->live()
+                ->getOptionLabelFromRecordUsing(fn(Model $record) => "{$record->code} / {$record->budgetType->code} / {$record->period->name} / " . number_format($record->amount))
+                ->afterStateUpdated(function (Set $set, ?string $state) {
+                    $expense = ExpenseBudget::query()->with(['budgetType', 'cluster'])->find($state);
+                    $prefix = 'BPL/' . $expense->budgetType->code . '/' . $expense->cluster->name;
+                    $set('code', GenerateCode::create(BudgetPlanner::class, 'code', $prefix));
+                })
                 ->preload()
                 ->required(),
             Select::make('branch_id')
                 ->live()
                 ->relationship('branch', 'name', fn($query, $get) => $query->where('cluster_id', $get('cluster_id')))
+                ->afterStateUpdated(function (Set $set, Get $get, ?string $state) {
+                    $branchName = Branch::query()->find($state);
+                    $expense = ExpenseBudget::query()->with(['budgetType'])->find($get('expense_budget_id'));
+                    $prefix = 'BPL/' . $expense->budgetType->code . '/' . $branchName->name;
+                    $set('code', GenerateCode::create(BudgetPlanner::class, 'code', $prefix));
+                })
                 ->searchable()
                 ->preload(),
             TextInput::make('total_amount')
